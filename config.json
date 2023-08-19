@@ -1,0 +1,7 @@
+{
+    "directoryPath": "C:/path/2/server/profiles/LBmaster/Data/LBGroup/Groups",
+    "discordWebhook": "webhook-url",
+	"roleToPing": "1231231231323213",
+	"groupChangeTime": 60,
+	"maxPlayerCount": 6
+}
