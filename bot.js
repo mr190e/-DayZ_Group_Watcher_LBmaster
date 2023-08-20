@@ -55,6 +55,14 @@ const formatGroupInfo = (groupTag, members) => {
     };
 };
 
+const countOnlineMembers = (members) => {
+    let count = 0;
+    members.forEach(member => {
+        if (member.online) count++;
+    });
+    return count;
+};
+
 const processGroupFile = (filePath) => {
     if (!filePath.endsWith('.json')) {
         console.log(`File ${filePath} is not a JSON file, ignoring...`);
@@ -103,24 +111,33 @@ const processGroupFile = (filePath) => {
 						let tempData = tempStore.get(steamid);
 						// Check if the new group is the same as the old group
 						if (tempData.oldGroup !== groupTag) {
-							sendToDiscord({
-								content: `<@&${config.roleToPing}>`,
-								embeds: [{
-									title: `Group Change Detected for ${member.name} (${steamid})`,
-									fields: [
-										{
-											name: `Old Group: ${tempData.oldGroup}`,
-											value: formatGroupInfo(tempData.oldGroup, tempData.oldMembers).value,
-											inline: false
-										},
-										{
-											name: `New Group: ${groupTag}`,
-											value: formatGroupInfo(groupTag, newMembers).value,
-											inline: false
-										},
-									],
-								}],
-							});
+							const oldGroupOnlineCount = countOnlineMembers(tempData.oldMembers);
+							const newGroupOnlineCount = countOnlineMembers(newMembers);
+
+							if (oldGroupOnlineCount > config.maxPlayerCount || newGroupOnlineCount > config.maxPlayerCount) {
+								sendToDiscord({
+									content: `<@&${config.roleToPing}>`,
+									embeds: [{
+										title: `Group Change Detected for ${member.name} (${steamid})`,
+										fields: [
+											{
+												name: `Old Group: ${tempData.oldGroup}`,
+												value: formatGroupInfo(tempData.oldGroup, tempData.oldMembers).value,
+												inline: false
+											},
+											{
+												name: `New Group: ${groupTag}`,
+												value: formatGroupInfo(groupTag, newMembers).value,
+												inline: false
+											},
+										],
+									}],
+								});
+							} else {
+								sendToDiscord({
+									content: `Player ${member.name} (${steamid}) moved from ${tempData.oldGroup} to ${groupTag}`
+								});
+							}
 						}
 						tempStore.delete(steamid);
 					} else {
